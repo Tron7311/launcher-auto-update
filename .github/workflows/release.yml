@@ -26,22 +26,34 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release
 
     - name: Build Release
       run: |
         cd build
-        cmake --build . --config Release
+        cmake --build . --config Release --verbose
 
-    - name: List Build Output
+    - name: Find Executable
       run: |
-        echo "Searching for LauncherApp.exe..."
-        dir /s /b build\*.exe
+        echo "=== Searching for LauncherApp.exe ==="
+        where /r build LauncherApp.exe
+        dir /s /b build\LauncherApp.exe
+        echo "=== Listing build directory structure ==="
+        tree build /F
 
-    - name: Create Release with Asset
+    - name: Copy Executable to Release Assets
+      run: |
+        mkdir release-assets
+        for /r build %%f in (LauncherApp.exe) do (
+          echo Found: %%f
+          copy "%%f" "release-assets\LauncherApp.exe"
+        )
+        dir release-assets
+
+    - name: Create Release with Executable
       uses: softprops/action-gh-release@v1
       with:
-        files: build/Release/LauncherApp.exe
+        files: release-assets/LauncherApp.exe
         body: |
           ## Release ${{ github.ref_name }}
           
@@ -51,9 +63,19 @@ jobs:
           - Configuration file support
           
           ### Installation
-          1. Download LauncherApp.exe
+          1. Download LauncherApp.exe from Assets below
           2. Extract to desired location
           3. Run LauncherApp.exe
+          
+          ### System Requirements
+          - Windows 10 or later
+          - Visual Studio C++ Runtime
+          
+          ### What's Included
+          - launcher-auto-update source code
+          - GitHub Actions CI/CD pipeline
+          - Professional documentation
+          - Automated release system
           
           ### Changelog
           See CHANGELOG.md for detailed changes.
