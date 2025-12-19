@@ -1,91 +1,53 @@
-name: Create Release
+name: Build
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
 
 jobs:
-  create-release:
+  build:
     runs-on: windows-latest
-    permissions:
-      contents: write
+    
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            arch: x86_64
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    - name: Find and Verify Executable
+    - name: Setup Visual Studio
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Install CMake
+      uses: lukka/get-cmake@latest
+
+    - name: Configure CMake
       run: |
-        echo "=== Searching for LauncherApp.exe in repository ==="
-        dir /s /b build\*.exe
-        
-        if exist "build\Release\LauncherApp.exe" (
-          echo Found: build\Release\LauncherApp.exe
-          echo File size:
-          dir build\Release\LauncherApp.exe
+        if exist build (
+          echo Build directory already exists, skipping...
         ) else (
-          echo Searching all subdirectories...
-          for /r build %%f in (LauncherApp.exe) do (
-            echo Found: %%f
-            dir %%f
-          )
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
         )
 
-    - name: Copy Executable to Release Assets
+    - name: Build
       run: |
-        mkdir release-assets
-        
-        REM Try primary path
-        if exist "build\Release\LauncherApp.exe" (
-          copy "build\Release\LauncherApp.exe" "release-assets\LauncherApp.exe"
-          echo Copied from build\Release\
-        ) else (
-          REM Search for any LauncherApp.exe in build
-          for /r build %%f in (LauncherApp.exe) do (
-            copy "%%f" "release-assets\LauncherApp.exe"
-            echo Copied from %%f
-          )
+        if exist build (
+          cd build
+          cmake --build . --config Release
         )
-        
-        echo.
-        echo === Release Assets ===
-        dir release-assets
 
-    - name: Create Release with Executable
-      uses: softprops/action-gh-release@v1
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      if: success()
       with:
-        files: release-assets/LauncherApp.exe
-        body: |
-          ## Release ${{ github.ref_name }}
-          
-          ### Features
-          - GitHub-based auto-update system
-          - SHA256 hash verification
-          - Configuration file support
-          
-          ### Installation
-          1. Download **LauncherApp.exe** from Assets below
-          2. Extract to desired location
-          3. Run LauncherApp.exe
-          
-          ### System Requirements
-          - Windows 10 or later
-          - Visual C++ Runtime (included with Windows)
-          
-          ### What's Included
-          - C++ launcher application (locally compiled)
-          - GitHub Actions CI/CD pipeline
-          - Professional documentation
-          - Automated release system
-          
-          ### Build Information
-          - Built with: Visual Studio 2022
-          - Build tool: CMake
-          - Configuration: Release
-          
-          ### Changelog
-          See CHANGELOG.md for detailed changes.
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: launcher-auto-update-${{ matrix.arch }}
+        path: build/Release/LauncherApp.exe
+        retention-days: 30
