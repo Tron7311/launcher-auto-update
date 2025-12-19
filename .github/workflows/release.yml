@@ -1,0 +1,81 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Setup Visual Studio
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Install CMake
+      uses: lukka/get-cmake@latest
+
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build Release
+      run: |
+        cd build
+        cmake --build . --config Release
+
+    - name: Create Release Body
+      id: release_body
+      run: |
+        $version = "${{ github.ref }}" -replace 'refs/tags/', ''
+        $body = @"
+        ## Release $version
+        
+        ### Features
+        - GitHub-based auto-update system
+        - SHA256 hash verification
+        - Configuration file support
+        
+        ### Downloads
+        - LauncherApp.exe - Main application
+        
+        ### Installation
+        1. Download LauncherApp.exe
+        2. Extract to desired location
+        3. Edit config.json with your repository
+        4. Run LauncherApp.exe
+        
+        ### Changelog
+        See CHANGELOG.md for detailed changes.
+        "@
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "BODY=$body"
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: ${{ steps.release_body.outputs.BODY }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/Release/LauncherApp.exe
+        asset_name: LauncherApp.exe
+        asset_content_type: application/octet-stream
