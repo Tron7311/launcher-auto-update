@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/)
 [![Windows](https://img.shields.io/badge/Platform-Windows-0078d4.svg)](#)
+[![Build Status](https://github.com/Tron7311/launcher-auto-update/actions/workflows/build.yml/badge.svg)](https://github.com/Tron7311/launcher-auto-update/actions)
 
 A production-grade C++ launcher with GitHub-based automatic update functionality. Zero external dependencies, compliance-first design, and complete source code included.
 
