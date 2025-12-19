@@ -33,25 +33,15 @@ jobs:
         cd build
         cmake --build . --config Release
 
-    - name: Find and List Executables
+    - name: List Build Output
       run: |
         echo "Searching for LauncherApp.exe..."
         dir /s /b build\*.exe
-        if exist "build\Release\LauncherApp.exe" (
-          echo "Found: build\Release\LauncherApp.exe"
-        ) else if exist "build\Debug\LauncherApp.exe" (
-          echo "Found: build\Debug\LauncherApp.exe"
-        ) else (
-          echo "Searching all build directories..."
-          dir /s build\
-        )
 
     - name: Create Release with Asset
       uses: softprops/action-gh-release@v1
       with:
-        files: |
-          build/Release/LauncherApp.exe
-          build/Debug/LauncherApp.exe
+        files: build/Release/LauncherApp.exe
         body: |
           ## Release ${{ github.ref_name }}
           
