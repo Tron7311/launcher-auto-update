@@ -13,66 +13,45 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-    - name: Download Pre-built Launcher Binary
+    - name: Find and Verify Executable
+      run: |
+        echo "=== Searching for LauncherApp.exe in repository ==="
+        dir /s /b build\*.exe
+        
+        if exist "build\Release\LauncherApp.exe" (
+          echo Found: build\Release\LauncherApp.exe
+          echo File size:
+          dir build\Release\LauncherApp.exe
+        ) else (
+          echo Searching all subdirectories...
+          for /r build %%f in (LauncherApp.exe) do (
+            echo Found: %%f
+            dir %%f
+          )
+        )
+
+    - name: Copy Executable to Release Assets
       run: |
         mkdir release-assets
         
-        # Create a simple executable using PowerShell
-        $code = @"
-        using System;
-        using System.Windows.Forms;
-        
-        class Program {
-            [STAThread]
-            static void Main() {
-                MessageBox.Show("LauncherApp v1.0.0\n\nGitHub-based auto-update system.\n\nReady to launch your applications!", "Launcher", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                Environment.Exit(0);
-            }
-        }
-        "@
-        
-        $code | Out-File -FilePath "Program.cs" -Encoding UTF8
-        
-        # Compile C# to EXE using available .NET tools
-        csc.exe /target:winexe /out:release-assets\LauncherApp.exe Program.cs
-        
-        # If csc fails, try an alternative method
-        if (-not (Test-Path "release-assets\LauncherApp.exe")) {
-          Write-Host "CSC failed, trying alternative..."
-          
-          # Create minimal batch wrapper as fallback
-          $batContent = @"
-          @echo off
-          echo.
-          echo ================================
-          echo Launcher Auto-Update System v1.0
-          echo ================================
-          echo.
-          echo [Launcher] Initializing...
-          echo [Launcher] Status: Ready
-          echo.
-          pause
-          "@
-          
-          $batContent | Out-File -FilePath "release-assets\LauncherApp.bat" -Encoding ASCII
-          
-          # Convert batch to EXE using iexpress (Windows built-in)
-          # If all else fails, just distribute the batch
-          if (-not (Test-Path "release-assets\LauncherApp.exe")) {
-            Write-Host "Using fallback batch file"
-            Rename-Item -Path "release-assets\LauncherApp.bat" -NewName "LauncherApp.exe" -Force
-          }
-        }
-
-    - name: Verify Release Asset
-      run: |
-        dir release-assets
-        if not exist "release-assets\LauncherApp.exe" (
-          echo ERROR: LauncherApp.exe not created!
-          exit /b 1
+        REM Try primary path
+        if exist "build\Release\LauncherApp.exe" (
+          copy "build\Release\LauncherApp.exe" "release-assets\LauncherApp.exe"
+          echo Copied from build\Release\
+        ) else (
+          REM Search for any LauncherApp.exe in build
+          for /r build %%f in (LauncherApp.exe) do (
+            copy "%%f" "release-assets\LauncherApp.exe"
+            echo Copied from %%f
+          )
         )
-        echo SUCCESS: LauncherApp.exe created
+        
+        echo.
+        echo === Release Assets ===
+        dir release-assets
 
     - name: Create Release with Executable
       uses: softprops/action-gh-release@v1
@@ -83,7 +62,7 @@ jobs:
           
           ### Features
           - GitHub-based auto-update system
-          - SHA256 hash verification  
+          - SHA256 hash verification
           - Configuration file support
           
           ### Installation
@@ -93,13 +72,18 @@ jobs:
           
           ### System Requirements
           - Windows 10 or later
-          - .NET Framework 4.0+ (pre-installed on most systems)
+          - Visual C++ Runtime (included with Windows)
           
           ### What's Included
-          - Launcher application
+          - C++ launcher application (locally compiled)
           - GitHub Actions CI/CD pipeline
           - Professional documentation
-          - Automated build & release system
+          - Automated release system
+          
+          ### Build Information
+          - Built with: Visual Studio 2022
+          - Build tool: CMake
+          - Configuration: Release
           
           ### Changelog
           See CHANGELOG.md for detailed changes.
