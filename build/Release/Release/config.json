@@ -1,0 +1,6 @@
+{
+  "repository": "Tron7311/launcher-auto-update",
+  "check_interval": 3600,
+  "auto_download": true,
+  "hash_verification": true
+}

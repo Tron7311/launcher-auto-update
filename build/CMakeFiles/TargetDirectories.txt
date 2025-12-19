@@ -1,0 +1,3 @@
+C:/Users/PC/Documents/launcher-auto-update/build/CMakeFiles/LauncherApp.dir
+C:/Users/PC/Documents/launcher-auto-update/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/PC/Documents/launcher-auto-update/build/CMakeFiles/ZERO_CHECK.dir
