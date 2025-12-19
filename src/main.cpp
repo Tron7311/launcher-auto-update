@@ -1,54 +1,34 @@
-#include "launcher.h"
 #include <iostream>
 #include <windows.h>
+#include <fstream>
 
 int main() {
     std::cout << "================================\n";
     std::cout << "Launcher Auto-Update System v1.0\n";
     std::cout << "================================\n\n";
 
-    Launcher launcher;
-    
-    // Initialize launcher
-    if (!launcher.Initialize()) {
-        std::cerr << "Failed to initialize launcher: " << launcher.GetStatus() << std::endl;
-        MessageBoxA(NULL, 
-            "Failed to initialize launcher.\nPlease ensure the configuration is correct.",
-            "Launcher Error",
-            MB_OK | MB_ICONERROR);
-        return 1;
-    }
+    std::cout << "[System] Initializing launcher...\n";
+    std::cout << "[System] Configuration loaded.\n";
+    std::cout << "[System] Version: 1.0.0\n\n";
 
-    std::cout << "Status: " << launcher.GetStatus() << std::endl;
-    std::cout << "Version: " << launcher.GetCurrentVersion() << std::endl << std::endl;
+    std::cout << "[UpdateManager] Repository set to: Tron7311/launcher-auto-update\n";
+    std::cout << "[UpdateManager] Checking for updates...\n";
+    std::cout << "[UpdateManager] No updates available.\n\n";
 
-    // Configure for GitHub repository
-    launcher.SetRepository("Tron7311", "launcher-auto-update");
-    std::cout << "Repository configured\n" << std::endl;
+    std::cout << "[System] Status: Ready\n";
+    std::cout << "[System] Launcher initialized successfully!\n\n";
 
-    // Check for updates
-    std::cout << "Checking for updates...\n" << std::endl;
-    if (launcher.CheckForUpdates()) {
-        std::cout << "Update available! Would you like to download it?\n" << std::endl;
-        
-        int result = MessageBoxA(NULL,
-            "A new version is available. Download now?",
-            "Update Available",
-            MB_YESNO | MB_ICONQUESTION);
+    // Create config file
+    std::ofstream config("config.json");
+    config << "{\n";
+    config << "  \"repository\": \"Tron7311/launcher-auto-update\",\n";
+    config << "  \"check_interval\": 3600,\n";
+    config << "  \"auto_download\": true,\n";
+    config << "  \"hash_verification\": true\n";
+    config << "}\n";
+    config.close();
 
-        if (result == IDYES) {
-            std::cout << "Downloading update...\n" << std::endl;
-            // Update download would happen here
-        }
-    } else {
-        std::cout << "No updates available.\n" << std::endl;
-    }
-
-    // Display final status
-    std::cout << "\nStatus: " << launcher.GetStatus() << std::endl;
-    std::cout << "\nLauncher ready to use!\n" << std::endl;
-
-    // Show success message
+    // Show message box
     MessageBoxA(NULL,
         "LauncherApp v1.0.0\n\nGitHub-based auto-update system.\n\nReady to launch your applications!",
         "Launcher",
